@@ -22,30 +22,25 @@ public interface PaginatedResultDelegate<T> {
      * 
      * The returned result is located by the giving page cursor.
      * 
-     * @param tag String
+     * @param key String
      * @param arguments Object[]
-     * @param pageCursor Object
+     * @param currentPageCursor Object
      * @return T
      */
-    public T fetchResult(String tag, Object[] arguments, Object pageCursor);
-    
-    public boolean isFetchAllResultsSupported(String tag, Object[] arguments);
-    
-    public T fetchAllResults(String tag, Object[] arguments);
+    public T fetchResult(String key, Object[] arguments, Object currentPageCursor);
     
     /**
      * Returns next page cursor based on the giving current page cursor.
      * 
-     * @param tag String
+     * @param key String
      * @param arguments Object[]
-     * @param pageCursor Object
-     * @param result TODO
+     * @param currentPageCursor Object
      * @return Object - returns the first page cursor, if the giving current page cursor is null.
      */
-    public Object getNextPageCursor(String tag, Object[] arguments, Object pageCursor, T result);
+    public Object getNextPageCursor(String key, Object[] arguments, Object currentPageCursor);
     
-    public Object getPrevPageCursor(String tag, Object[] arguments, Object pageCursor, T result);
+    public Object getPrevPageCursor(String key, Object[] arguments, Object currentPageCursor);
     
-    public Object getFirstPageCursor(String tag, Object[] arguments);
+    public Object getFirstPageCursor(String key, Object[] arguments);
     
 }

@@ -20,27 +20,16 @@ public class PaginatedResult<T> {
     public static final Object NONE_PAGE_CURSOR = null;
 
     private PaginatedResultDelegate<T> delegate;
-    private String tag;
+    private String key;
     private Object[] arguments;
     private Object currentPageCursor;
     private T result;
 
-    public PaginatedResult(PaginatedResultDelegate<T> delegate, String tag, Object[] arguments) {
-        this.tag = tag;
+    public PaginatedResult(PaginatedResultDelegate<T> delegate, String key, Object... arguments) {
+        this.key = key;
         this.arguments = arguments;
         this.delegate = delegate;
         this.currentPageCursor = NONE_PAGE_CURSOR;
-    }
-    
-    public boolean isGetAllResultsSupported() {
-        return delegate.isFetchAllResultsSupported(tag, arguments);
-    }
-    
-    public T getAllResults() {
-        if (!isGetAllResultsSupported()) {
-            throw new UnsupportedOperationException("Get all results for \'" + tag + "\' is not supported.");
-        }
-        return delegate.fetchAllResults(tag, arguments);
     }
     
     /**
@@ -52,11 +41,30 @@ public class PaginatedResult<T> {
      * @return T
      */
     public T getResult(Object pageCursor) {
-        checkForNoPageCursor(pageCursor);
-        checkForNullDelegate();
-        result = delegate.fetchResult(tag, arguments, pageCursor);
         setCurrentPageCursor(pageCursor);
+        return getResult();
+    }
+    
+    public T getResult() {
+        checkForNoPageCursor(currentPageCursor);
+        checkForNullDelegate();
+        result = delegate.fetchResult(key, arguments, currentPageCursor); 
         return result;
+    }
+    
+    public PaginatedResult<T> next() {
+        setCurrentPageCursor(getNextPageCursor());
+        return this;
+    }
+    
+    public PaginatedResult<T> previous() {
+        setCurrentPageCursor(getPrevPageCursor());
+        return this;
+    }
+    
+    public PaginatedResult<T> rewind() {
+        setCurrentPageCursor(getFirstPageCursor());
+        return this;
     }
     
     private void setCurrentPageCursor(Object pageCursor) {
@@ -67,8 +75,8 @@ public class PaginatedResult<T> {
         return currentPageCursor;
     }
     
-    public Object getFirstPageCursor() {
-        return delegate.getFirstPageCursor(tag, arguments);
+    private Object getFirstPageCursor() {
+        return delegate.getFirstPageCursor(key, arguments);
     }
     
     /**
@@ -80,16 +88,16 @@ public class PaginatedResult<T> {
      * 
      * @return Object
      */
-    public Object getNextPageCursor() {
+    private Object getNextPageCursor() {
         checkForNullDelegate();
         checkForNoPageCursor(getCurrentPageCursor());
-        return delegate.getNextPageCursor(tag, arguments, getCurrentPageCursor(), result);
+        return delegate.getNextPageCursor(key, arguments, getCurrentPageCursor());
     }
     
-    public Object getPrevPageCursor() {
+    private Object getPrevPageCursor() {
         checkForNullDelegate();
         checkForNoPageCursor(getCurrentPageCursor());
-        return delegate.getPrevPageCursor(tag, arguments, getCurrentPageCursor(), result);
+        return delegate.getPrevPageCursor(key, arguments, getCurrentPageCursor());
     }
     
     private void checkForNullDelegate() {
@@ -101,8 +109,7 @@ public class PaginatedResult<T> {
     
     private void checkForNoPageCursor(Object pageCursor) {
         if (NONE_PAGE_CURSOR == pageCursor) {
-            throw new IllegalArgumentException(
-                    "Page cursor shouldn't be NONE_PAGE_CURSOR");
+            throw new NullPointerException("Page cursor");
         }
     }
         

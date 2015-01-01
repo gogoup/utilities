@@ -53,5 +53,6 @@
 
   <modules>
   	<module>utilities-pagination</module>
+  	<module>utilities-misc</module>
   </modules>
 </project>
