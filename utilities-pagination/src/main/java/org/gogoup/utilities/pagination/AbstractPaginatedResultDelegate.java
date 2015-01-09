@@ -30,26 +30,26 @@ public abstract class AbstractPaginatedResultDelegate<T> implements PaginatedRes
     }
 
     @Override
-    public Object getNextPageCursor(String key, Object[] arguments,
-            Object currentPageCursor) {
+    public PageOffset getNextPageOffset(String key, Object[] arguments,
+            PageOffset currentPageOffset) {
         checkForUnsupportedKeys(key);
         PaginatedResult<?> osResult = (PaginatedResult<?>) arguments[paginatedResultIndex];
-        return osResult.next().getCurrentPageCursor();
+        return osResult.next().getPageOffset();
     }
 
     @Override
-    public Object getPrevPageCursor(String key, Object[] arguments,
-            Object currentPageCursor) {
+    public PageOffset getPrevPageOffset(String key, Object[] arguments,
+            PageOffset currentPageOffset) {
         checkForUnsupportedKeys(key);
         PaginatedResult<?> osResult = (PaginatedResult<?>) arguments[paginatedResultIndex];
-        return osResult.previous().getCurrentPageCursor();
+        return osResult.previous().getPageOffset();
     }
 
     @Override
-    public Object getFirstPageCursor(String key, Object[] arguments) {
+    public PageOffset getFirstPageOffset(String key, Object[] arguments) {
         checkForUnsupportedKeys(key);
         PaginatedResult<?> osResult = (PaginatedResult<?>) arguments[paginatedResultIndex];
-        return osResult.rewind().getCurrentPageCursor();
+        return osResult.rewind().getPageOffset();
     }
     
     private void checkForUnsupportedKeys(String key) {

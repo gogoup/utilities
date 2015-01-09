@@ -17,19 +17,19 @@ package org.gogoup.utilities.pagination;
 
 public class PaginatedResult<T> {
     
-    public static final Object NONE_PAGE_CURSOR = null;
+    public static final PageOffset NONE_PAGE_OFFSET = null;
 
     private PaginatedResultDelegate<T> delegate;
     private String key;
     private Object[] arguments;
-    private Object currentPageCursor;
+    private PageOffset currentPageOffset;
     private T result;
 
     public PaginatedResult(PaginatedResultDelegate<T> delegate, String key, Object... arguments) {
         this.key = key;
         this.arguments = arguments;
         this.delegate = delegate;
-        this.currentPageCursor = NONE_PAGE_CURSOR;
+        this.currentPageOffset = NONE_PAGE_OFFSET;
     }
     
     /**
@@ -40,43 +40,46 @@ public class PaginatedResult<T> {
      * @param pageCursor Object
      * @return T
      */
-    public T getResult(Object pageCursor) {
+    public T getResult(PageOffset pageCursor) {
         setCurrentPageCursor(pageCursor);
         return getResult();
     }
     
     public T getResult() {
-        checkForNoPageCursor(currentPageCursor);
+        if (NONE_PAGE_OFFSET == currentPageOffset) {
+            setCurrentPageCursor(getFirstPageOffset());
+        }
+        checkForNoPageOffset(currentPageOffset);
         checkForNullDelegate();
-        result = delegate.fetchResult(key, arguments, currentPageCursor); 
+        result = delegate.fetchResult(key, arguments, currentPageOffset); 
         return result;
     }
     
     public PaginatedResult<T> next() {
-        setCurrentPageCursor(getNextPageCursor());
+        setCurrentPageCursor(getNextPageOffset());
         return this;
     }
     
     public PaginatedResult<T> previous() {
-        setCurrentPageCursor(getPrevPageCursor());
+        setCurrentPageCursor(getPrevPageOffset());
         return this;
     }
     
     public PaginatedResult<T> rewind() {
-        setCurrentPageCursor(getFirstPageCursor());
+        setCurrentPageCursor(getFirstPageOffset());
         return this;
     }
     
-    private void setCurrentPageCursor(Object pageCursor) {
-        currentPageCursor = pageCursor;
+    private void setCurrentPageCursor(PageOffset pageCursor) {
+        currentPageOffset = pageCursor;
     }
     
-    public Object getCurrentPageCursor() {
-        return currentPageCursor;
+    public PageOffset getPageOffset() {
+        return currentPageOffset;
     }
     
-    private Object getFirstPageCursor() {
-        return delegate.getFirstPageCursor(key, arguments);
+    private PageOffset getFirstPageOffset() {
+        return delegate.getFirstPageOffset(key, arguments);
     }
     
     /**
@@ -88,16 +91,16 @@ public class PaginatedResult<T> {
      * 
      * @return Object
      */
-    private Object getNextPageCursor() {
+    private PageOffset getNextPageOffset() {
         checkForNullDelegate();
-        checkForNoPageCursor(getCurrentPageCursor());
-        return delegate.getNextPageCursor(key, arguments, getCurrentPageCursor());
+        checkForNoPageOffset(getPageOffset());
+        return delegate.getNextPageOffset(key, arguments, getPageOffset());
     }
     
-    private Object getPrevPageCursor() {
+    private PageOffset getPrevPageOffset() {
         checkForNullDelegate();
-        checkForNoPageCursor(getCurrentPageCursor());
-        return delegate.getPrevPageCursor(key, arguments, getCurrentPageCursor());
+        checkForNoPageOffset(getPageOffset());
+        return delegate.getPrevPageOffset(key, arguments, getPageOffset());
     }
     
     private void checkForNullDelegate() {
@@ -107,8 +110,8 @@ public class PaginatedResult<T> {
         }
     }
     
-    private void checkForNoPageCursor(Object pageCursor) {
-        if (NONE_PAGE_CURSOR == pageCursor) {
+    private void checkForNoPageOffset(Object pageCursor) {
+        if (NONE_PAGE_OFFSET == pageCursor) {
             throw new NullPointerException("Page cursor");
         }
     }

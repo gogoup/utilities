@@ -27,20 +27,20 @@ public interface PaginatedResultDelegate<T> {
      * @param currentPageCursor Object
      * @return T
      */
-    public T fetchResult(String key, Object[] arguments, Object currentPageCursor);
+    public T fetchResult(String key, Object[] arguments, PageOffset currentPageCursor);
     
     /**
      * Returns next page cursor based on the giving current page cursor.
      * 
      * @param key String
      * @param arguments Object[]
-     * @param currentPageCursor Object
+     * @param currentPageOffset Object
      * @return Object - returns the first page cursor, if the giving current page cursor is null.
      */
-    public Object getNextPageCursor(String key, Object[] arguments, Object currentPageCursor);
+    public PageOffset getNextPageOffset(String key, Object[] arguments, PageOffset currentPageOffset);
     
-    public Object getPrevPageCursor(String key, Object[] arguments, Object currentPageCursor);
+    public PageOffset getPrevPageOffset(String key, Object[] arguments, PageOffset currentPageOffset);
     
-    public Object getFirstPageCursor(String key, Object[] arguments);
+    public PageOffset getFirstPageOffset(String key, Object[] arguments);
     
 }
