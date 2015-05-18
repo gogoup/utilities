@@ -9,7 +9,7 @@ public abstract class EntityObject<T> extends DirtyMark {
         this.objectSegment = objectSegment;
     }
 
-    protected T getObjectSegment() {
+    public T getObjectSegment() {
         return objectSegment;
     }
     

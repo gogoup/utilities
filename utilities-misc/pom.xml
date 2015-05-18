@@ -3,10 +3,9 @@
   <parent>
     <groupId>org.gogoup.utilities</groupId>
     <artifactId>utilities-parent</artifactId>
-    <version>0.1.1-SNAPSHOT</version>
+    <version>0.1.2-SNAPSHOT</version>
   </parent>
   <artifactId>utilities-misc</artifactId>
-  <version>0.1.1-SNAPSHOT</version>
   <name>Utilities Misc</name>
   <description>Things are not worth to be maintained as an individual module.</description>
 </project>

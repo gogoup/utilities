@@ -43,20 +43,33 @@ public class AttributeFormat {
     public Pattern getPattern() {
         return pattern;
     }
-    
-    public void validate(String attribute) {
+
+    public boolean isValidLength(String attribute) {
+        checkForNullAttribute(attribute);
+        int length = attribute.trim().length();
+        return !(length < minLength || length > maxLength);
+    }
+
+    public boolean isValidPattern(String attribute) {
+        checkForNullAttribute(attribute);
+        return pattern.matcher(attribute).matches();
+    }
+
+    private void checkForNullAttribute(String attribute) {
         int length = attribute.trim().length();
         if (null == attribute || 0 == length) {
             throw new NullPointerException(attributeName + " cannot be null or empty.");
         }
-        if (length < minLength
-                || length > maxLength) {
+    }
+    
+    public void validate(String attribute) {
+        if (!isValidLength(attribute)) {
             String message = "Length of " + attributeName + " need to be greater than" + minLength
                     + " and less " + maxLength + " characters";
             throw new IllegalAttributeLengthException(attributeName,
                     attribute, minLength, maxLength, message);
         }
-        if (!pattern.matcher(attribute).matches()) {
+        if (!isValidPattern(attribute)) {
             throw new IllegalAttributeFormatException(attributeName, attribute, patternDescription);
         }
     }
