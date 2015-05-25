@@ -20,11 +20,17 @@ import java.util.HashSet;
 import java.util.Set;
 
 public abstract class AbstractPaginatedResultDelegate<T> implements PaginatedResultDelegate<T> {
+
+    public final static int RESULT_INDEX = 0;
     
     private int paginatedResultIndex;
     private Set<String> keys;
+
+    protected AbstractPaginatedResultDelegate(String... keys) {
+        this(RESULT_INDEX, keys);
+    }
     
-    public AbstractPaginatedResultDelegate(int paginatedResultIndex, String... keys) {
+    protected AbstractPaginatedResultDelegate(int paginatedResultIndex, String... keys) {
         this.paginatedResultIndex= paginatedResultIndex;
         this.keys = new HashSet<String>(Arrays.asList(keys));
     }
