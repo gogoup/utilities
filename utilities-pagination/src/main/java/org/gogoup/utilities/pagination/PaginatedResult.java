@@ -16,8 +16,6 @@
 package org.gogoup.utilities.pagination;
 
 public class PaginatedResult<T> {
-    
-    public static final PageOffset NONE_PAGE_OFFSET = null;
 
     private PaginatedResultDelegate<T> delegate;
     private String key;
@@ -29,7 +27,7 @@ public class PaginatedResult<T> {
         this.key = key;
         this.arguments = arguments;
         this.delegate = delegate;
-        this.currentPageOffset = NONE_PAGE_OFFSET;
+        this.currentPageOffset = null;
     }
     
     /**
@@ -37,17 +35,27 @@ public class PaginatedResult<T> {
      * 
      * Returns the first page of result, if the giving page cursor is null.
      * 
-     * @param pageCursor Object
+     * @param pageOffset Object
      * @return T
      */
-    public T getResult(PageOffset pageCursor) {
-        setCurrentPageCursor(pageCursor);
+    public T getResult(PageOffset pageOffset) {
+        setCurrentPageOffset(pageOffset);
         return getResult();
+    }
+
+    /**
+     * Retrieve results at the first page with the given size.
+     *
+     * @param size int
+     * @return T
+     */
+    public T getResult(int size) {
+        return getResult(new PageOffset(1, size));
     }
     
     public T getResult() {
-        if (NONE_PAGE_OFFSET == currentPageOffset) {
-            setCurrentPageCursor(getFirstPageOffset());
+        if (null == currentPageOffset) {
+            setCurrentPageOffset(getFirstPageOffset());
         }
         checkForNoPageOffset(currentPageOffset);
         checkForNullDelegate();
@@ -56,51 +64,41 @@ public class PaginatedResult<T> {
     }
     
     public PaginatedResult<T> next() {
-        setCurrentPageCursor(getNextPageOffset());
+        setCurrentPageOffset(getNextPageOffset());
         return this;
     }
     
     public PaginatedResult<T> previous() {
-        setCurrentPageCursor(getPrevPageOffset());
+        setCurrentPageOffset(getPrevPageOffset());
         return this;
     }
     
     public PaginatedResult<T> rewind() {
-        setCurrentPageCursor(getFirstPageOffset());
+        setCurrentPageOffset(getFirstPageOffset());
         return this;
     }
     
-    private void setCurrentPageCursor(PageOffset pageCursor) {
+    private void setCurrentPageOffset(PageOffset pageCursor) {
         currentPageOffset = pageCursor;
     }
     
-    public PageOffset getPageOffset() {
+    public PageOffset getCurrentPageOffset() {
         return currentPageOffset;
     }
     
     private PageOffset getFirstPageOffset() {
-        return delegate.getFirstPageOffset(key, arguments);
+        checkForNoPageOffset(getCurrentPageOffset());
+        return new PageOffset(1, getCurrentPageOffset().getSize());
     }
-    
-    /**
-     * Retrieves the next page cursor.
-     * 
-     * Returns the first page cursor, if the current page cursor is null.
-     * 
-     * Returns null value, if there no page of results to go.
-     * 
-     * @return Object
-     */
+
     private PageOffset getNextPageOffset() {
-        checkForNullDelegate();
-        checkForNoPageOffset(getPageOffset());
-        return delegate.getNextPageOffset(key, arguments, getPageOffset());
+        checkForNoPageOffset(getCurrentPageOffset());
+        return new PageOffset(getCurrentPageOffset().getStart() + getCurrentPageOffset().getSize(), getCurrentPageOffset().getSize());
     }
     
     private PageOffset getPrevPageOffset() {
-        checkForNullDelegate();
-        checkForNoPageOffset(getPageOffset());
-        return delegate.getPrevPageOffset(key, arguments, getPageOffset());
+        checkForNoPageOffset(getCurrentPageOffset());
+        return new PageOffset(getCurrentPageOffset().getStart() - getCurrentPageOffset().getSize(), getCurrentPageOffset().getSize());
     }
     
     private void checkForNullDelegate() {
@@ -111,8 +109,8 @@ public class PaginatedResult<T> {
     }
     
     private void checkForNoPageOffset(Object pageCursor) {
-        if (NONE_PAGE_OFFSET == pageCursor) {
-            throw new NullPointerException("Page cursor");
+        if (null == pageCursor) {
+            throw new IllegalArgumentException("You need to specify page offset! Try to invoke .getResult(...)");
         }
     }
         

@@ -15,53 +15,37 @@
  *******************************************************************************/
 package org.gogoup.utilities.pagination;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
-public abstract class AbstractPaginatedResultDelegate<T> implements PaginatedResultDelegate<T> {
+public abstract class PaginatedResultMapper<T, S> implements PaginatedResultDelegate<T> {
 
     public final static int RESULT_INDEX = 0;
     
     private int paginatedResultIndex;
     private Set<String> keys;
 
-    protected AbstractPaginatedResultDelegate(String... keys) {
+    protected PaginatedResultMapper(String... keys) {
         this(RESULT_INDEX, keys);
     }
     
-    protected AbstractPaginatedResultDelegate(int paginatedResultIndex, String... keys) {
+    protected PaginatedResultMapper(int paginatedResultIndex, String... keys) {
         this.paginatedResultIndex= paginatedResultIndex;
         this.keys = new HashSet<String>(Arrays.asList(keys));
     }
 
     @Override
-    public PageOffset getNextPageOffset(String key, Object[] arguments,
-            PageOffset currentPageOffset) {
+    public T fetchResult(String key, Object[] arguments, PageOffset currentPageCursor) {
         checkForUnsupportedKeys(key);
-        PaginatedResult<?> osResult = (PaginatedResult<?>) arguments[paginatedResultIndex];
-        return osResult.next().getPageOffset();
+        PaginatedResult<S> result = (PaginatedResult<S>) arguments[RESULT_INDEX];
+        S values = result.getResult(currentPageCursor);
+        return toResult(key, values, arguments);
     }
 
-    @Override
-    public PageOffset getPrevPageOffset(String key, Object[] arguments,
-            PageOffset currentPageOffset) {
-        checkForUnsupportedKeys(key);
-        PaginatedResult<?> osResult = (PaginatedResult<?>) arguments[paginatedResultIndex];
-        return osResult.previous().getPageOffset();
-    }
-
-    @Override
-    public PageOffset getFirstPageOffset(String key, Object[] arguments) {
-        checkForUnsupportedKeys(key);
-        PaginatedResult<?> osResult = (PaginatedResult<?>) arguments[paginatedResultIndex];
-        return osResult.rewind().getPageOffset();
-    }
+    abstract protected T toResult(String key, S values, Object[] arguments);
     
     private void checkForUnsupportedKeys(String key) {
         if (!keys.contains(key)) {
             throw new UnsupportedOperationException(key);
         }
     }
-
 }
