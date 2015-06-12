@@ -34,11 +34,11 @@ public abstract class PaginatedResultMapper<T, S> implements PaginatedResultDele
     }
 
     @Override
-    public T fetchResult(String key, Object[] arguments, PageOffset currentPageCursor) {
-        checkForUnsupportedKeys(key);
-        PaginatedResult<S> result = (PaginatedResult<S>) arguments[RESULT_INDEX];
-        S values = result.getResult(currentPageCursor);
-        return toResult(key, values, arguments);
+    public T fetchResult(ResultFetchRequest request) {
+        checkForUnsupportedKeys(request.getKey());
+        PaginatedResult<S> result = (PaginatedResult<S>) request.getArguments()[RESULT_INDEX];
+        result = result.start(request.getPageOffset());
+        return toResult(request.getKey(), result.getResult(), request.getArguments());
     }
 
     abstract protected T toResult(String key, S values, Object[] arguments);

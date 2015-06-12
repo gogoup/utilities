@@ -1,10 +1,10 @@
 package org.gogoup.utilities.misc;
 
-public abstract class AbstractExceptionMapper<T> implements ExceptionMapper {
+public abstract class ChainedExceptionMapper<T> implements ExceptionMapper {
 
-    private AbstractExceptionMapper<T> successor;
+    private ChainedExceptionMapper<T> successor;
 
-    public AbstractExceptionMapper(AbstractExceptionMapper successor) {
+    public ChainedExceptionMapper(ChainedExceptionMapper successor) {
         this.successor = successor;
     }
 

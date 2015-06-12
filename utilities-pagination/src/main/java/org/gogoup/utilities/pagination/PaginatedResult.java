@@ -15,13 +15,17 @@
  *******************************************************************************/
 package org.gogoup.utilities.pagination;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 public class PaginatedResult<T> {
 
     private PaginatedResultDelegate<T> delegate;
     private String key;
     private Object[] arguments;
     private PageOffset currentPageOffset;
-    private T result;
+    private String pagingId;
 
     public PaginatedResult(PaginatedResultDelegate<T> delegate, String key, Object... arguments) {
         this.key = key;
@@ -29,38 +33,45 @@ public class PaginatedResult<T> {
         this.delegate = delegate;
         this.currentPageOffset = null;
     }
+
+    private void generateId() {
+        StringBuilder strBuilder = new StringBuilder();
+        for (Object arg: arguments) {
+            strBuilder.append(arg.hashCode());
+        }
+        pagingId = toMD5(key + getCurrentPageOffset().getSize() + strBuilder.toString());
+    }
+
+    public String getPagingId() {
+        return pagingId;
+    }
     
     /**
-     * Retrieve the result at the giving page cursor.
-     * 
-     * Returns the first page of result, if the giving page cursor is null.
+     * Initialize the current page offset to the given one.
      * 
      * @param pageOffset Object
-     * @return T
+     * @return PaginatedResult<T>
      */
-    public T getResult(PageOffset pageOffset) {
+    public PaginatedResult<T> start(PageOffset pageOffset) {
         setCurrentPageOffset(pageOffset);
-        return getResult();
+        generateId();
+        return this;
     }
 
     /**
-     * Retrieve results at the first page with the given size.
+     * Initialize the current page offset to the first page with the given size.
      *
      * @param size int
-     * @return T
+     * @return PaginatedResult<T>
      */
-    public T getResult(int size) {
-        return getResult(new PageOffset(1, size));
+    public PaginatedResult<T> start(int size) {
+        return start(new PageOffset(1, size));
     }
     
     public T getResult() {
-        if (null == currentPageOffset) {
-            setCurrentPageOffset(getFirstPageOffset());
-        }
         checkForNoPageOffset(currentPageOffset);
         checkForNullDelegate();
-        result = delegate.fetchResult(key, arguments, currentPageOffset); 
-        return result;
+        return delegate.fetchResult(new ResultFetchRequest(getPagingId(), key, arguments, currentPageOffset));
     }
     
     public PaginatedResult<T> next() {
@@ -113,5 +124,20 @@ public class PaginatedResult<T> {
             throw new IllegalArgumentException("You need to specify page offset! Try to invoke .getResult(...)");
         }
     }
-        
+
+    private String toMD5(String message) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            byte[] hashedBytes = digest.digest(message.getBytes("UTF-8"));
+            StringBuilder strBuilder = new StringBuilder();
+            for (int i = 0; i < hashedBytes.length; i++) {
+                strBuilder.append(Integer.toString((hashedBytes[i] & 0xff) + 0x100, 16)
+                        .substring(1));
+            }
+            return strBuilder.toString();
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
 }
