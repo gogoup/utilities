@@ -37,7 +37,9 @@ public class PaginatedResult<T> {
     private void generateId() {
         StringBuilder strBuilder = new StringBuilder();
         for (Object arg: arguments) {
-            strBuilder.append(arg.hashCode());
+            if (null != arg) {
+                strBuilder.append(arg.hashCode());
+            }
         }
         pagingId = toMD5(key + getCurrentPageOffset().getSize() + strBuilder.toString());
     }
