@@ -54,5 +54,6 @@
   <modules>
   	<module>utilities-pagination</module>
   	<module>utilities-misc</module>
+      <module>utilities-cassandra</module>
   </modules>
 </project>
