@@ -23,7 +23,8 @@ public class ShortUUID {
     
     public static String randomUUID() {
         try {
-            return new String(Base64.encodeBytes(toByteArray(UUID.randomUUID()), Base64.URL_SAFE)).toLowerCase();
+            String id = new String(Base64.encodeBytes(toByteArray(UUID.randomUUID()), Base64.URL_SAFE)).toLowerCase();
+            return id.split("=")[0];
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
