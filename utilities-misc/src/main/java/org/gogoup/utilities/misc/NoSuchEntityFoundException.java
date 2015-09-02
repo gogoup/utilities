@@ -3,12 +3,7 @@ package org.gogoup.utilities.misc;
 
 public class NoSuchEntityFoundException extends RuntimeException {
 
-    /**
-     * 
-     */
-    private static final long serialVersionUID = -5676880192596730035L;
-    
-    private Class<?> clazz;
+    private String entityName;
     private String[] ids;
     
     public NoSuchEntityFoundException(Class<?> clazz, String id, String message) {
@@ -17,12 +12,12 @@ public class NoSuchEntityFoundException extends RuntimeException {
     
     public NoSuchEntityFoundException(Class<?> clazz, String[] ids, String message) {
         super(message);
-        this.clazz = clazz;
+        this.entityName = clazz.getName();
         this.ids = ids;
     }
 
-    public Class<?> getClazz() {
-        return clazz;
+    public String getEntityName() {
+        return entityName;
     }
 
     public String[] getIds() {
