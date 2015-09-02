@@ -11,8 +11,12 @@ public class NoSuchEntityFoundException extends RuntimeException {
     }
     
     public NoSuchEntityFoundException(Class<?> clazz, String[] ids, String message) {
+        this(clazz.getName(), ids, message);
+    }
+
+    public NoSuchEntityFoundException(String entityName, String[] ids, String message) {
         super(message);
-        this.entityName = clazz.getName();
+        this.entityName = entityName;
         this.ids = ids;
     }
 
