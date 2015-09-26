@@ -30,13 +30,13 @@ public abstract class PaginatedResultMapper<T, S> implements PaginatedResultDele
     
     protected PaginatedResultMapper(int paginatedResultIndex, String... keys) {
         this.paginatedResultIndex= paginatedResultIndex;
-        this.keys = new HashSet<String>(Arrays.asList(keys));
+        this.keys = new HashSet<>(Arrays.asList(keys));
     }
 
     @Override
     public T fetchResult(ResultFetchRequest request) {
         checkForUnsupportedKeys(request.getKey());
-        PaginatedResult<S> result = (PaginatedResult<S>) request.getArguments()[RESULT_INDEX];
+        PaginatedResult<S> result = (PaginatedResult<S>) request.getArguments()[paginatedResultIndex];
         result = result.start(request.getPageOffset());
         return toResult(request.getKey(), result.getResult(), request.getArguments());
     }
