@@ -9,12 +9,14 @@ public class ResultFetchRequest {
     private String key;
     private Object[] arguments;
     private PageOffset pageOffset;
+    private Sorting sorting;
 
-    public ResultFetchRequest(String id, String key, Object[] arguments, PageOffset pageOffset) {
+    public ResultFetchRequest(String id, String key, Object[] arguments, PageOffset pageOffset, Sorting sorting) {
         this.id = id;
         this.key = key;
         this.arguments = arguments;
         this.pageOffset = pageOffset;
+        this.sorting = sorting;
     }
 
     public String getId() {
@@ -31,5 +33,9 @@ public class ResultFetchRequest {
 
     public PageOffset getPageOffset() {
         return pageOffset;
+    }
+
+    public Sorting getSorting() {
+        return sorting;
     }
 }

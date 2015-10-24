@@ -26,6 +26,7 @@ public class PaginatedResult<T> {
     private Object[] arguments;
     private PageOffset currentPageOffset;
     private String pagingId;
+    private Sorting sorting;
 
     public PaginatedResult(PaginatedResultDelegate<T> delegate, String key, Object... arguments) {
         this.key = key;
@@ -41,10 +42,18 @@ public class PaginatedResult<T> {
                 strBuilder.append(arg.hashCode());
             }
         }
-        pagingId = toMD5(key + getCurrentPageOffset().getSize() + strBuilder.toString());
+        strBuilder.append(key);
+        strBuilder.append(getCurrentPageOffset().getStart());
+        strBuilder.append(getCurrentPageOffset().getSize());
+        strBuilder.append(getSorting().getField());
+        strBuilder.append(getSorting().getOrder().toString());
+        pagingId = toMD5(strBuilder.toString());
     }
 
     public String getPagingId() {
+        if (null == pagingId) {
+            generateId();
+        }
         return pagingId;
     }
     
@@ -55,8 +64,12 @@ public class PaginatedResult<T> {
      * @return PaginatedResult<T>
      */
     public PaginatedResult<T> start(PageOffset pageOffset) {
+        return start(pageOffset, null);
+    }
+
+    public PaginatedResult<T> start(PageOffset pageOffset, Sorting sorting) {
         setCurrentPageOffset(pageOffset);
-        generateId();
+        this.sorting = sorting;
         return this;
     }
 
@@ -69,11 +82,16 @@ public class PaginatedResult<T> {
     public PaginatedResult<T> start(int size) {
         return start(new PageOffset(1, size));
     }
+
+    public PaginatedResult<T> start(int size, Sorting sorting) {
+        return start(new PageOffset(1, size), sorting);
+    }
     
     public T getResult() {
         checkForNoPageOffset(currentPageOffset);
         checkForNullDelegate();
-        return delegate.fetchResult(new ResultFetchRequest(getPagingId(), key, arguments, currentPageOffset));
+        return delegate.fetchResult
+                (new ResultFetchRequest(getPagingId(), key, arguments, currentPageOffset, sorting));
     }
     
     public PaginatedResult<T> next() {
@@ -98,7 +116,11 @@ public class PaginatedResult<T> {
     public PageOffset getCurrentPageOffset() {
         return currentPageOffset;
     }
-    
+
+    public Sorting getSorting() {
+        return sorting;
+    }
+
     private PageOffset getFirstPageOffset() {
         checkForNoPageOffset(getCurrentPageOffset());
         return new PageOffset(1, getCurrentPageOffset().getSize());
