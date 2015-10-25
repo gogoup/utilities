@@ -45,7 +45,9 @@ public class PaginatedResult<T> {
         strBuilder.append(key);
         strBuilder.append(getCurrentPageOffset().getStart());
         strBuilder.append(getCurrentPageOffset().getSize());
-        strBuilder.append(getSorting().getField());
+        if (null != getSorting()) {
+            strBuilder.append(getSorting().getField());
+        }
         strBuilder.append(getSorting().getOrder().toString());
         pagingId = toMD5(strBuilder.toString());
     }
