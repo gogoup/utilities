@@ -31,7 +31,7 @@ public class ShortUUID {
     public static String randomUUID() {
         try {
             String id = new String(Base64.encodeBytes(toByteArray(UUID.randomUUID()), Base64.URL_SAFE)).toLowerCase();
-            return id.split("=")[0];
+            return id.replace("=", "");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -77,7 +77,22 @@ public class ShortUUID {
         return new String(hexChars);
     }
 
-    public static byte[] generateHMACUUID() {
+    public static String generateBase64HMACUUID() {
+        try {
+            return Base64.encodeBytes(
+                    generateHMACUUID(ShortUUID.generateOrderedTimeBasedUUID(), ShortUUID.randomUUID()),
+                    Base64.URL_SAFE);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static String generateHexHMACUUID() {
+        return convertBytesToHexString(
+                generateHMACUUID(ShortUUID.generateOrderedTimeBasedUUID(), ShortUUID.randomUUID()));
+    }
+
+    private static byte[] generateHMACUUID() {
         return generateHMACUUID(ShortUUID.generateOrderedTimeBasedUUID(), ShortUUID.randomUUID());
     }
 
