@@ -77,7 +77,7 @@ public class ShortUUID {
         return new String(hexChars);
     }
 
-    public byte[] generateHMACUUID() {
+    public static byte[] generateHMACUUID() {
         return generateHMACUUID(ShortUUID.generateOrderedTimeBasedUUID(), ShortUUID.randomUUID());
     }
 
