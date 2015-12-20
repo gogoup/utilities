@@ -15,8 +15,15 @@
  *******************************************************************************/
 package org.gogoup.utilities.misc;
 
+import com.fasterxml.uuid.Generators;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 
 public class ShortUUID {
@@ -35,6 +42,58 @@ public class ShortUUID {
         bb.putLong(uuid.getMostSignificantBits());
         bb.putLong(uuid.getLeastSignificantBits());
         return bb.array();
+    }
+
+    public static String generateOrderedTimeBasedUUID() {
+        UUID uuid = Generators.timeBasedGenerator().generate();
+        String uuidString = uuid.toString();
+        String orderedUUIDString = uuidString.substring(14, 18)
+                + uuidString.substring(9, 13)
+                + uuidString.substring(0, 8)
+                + uuidString.substring(19, 23)
+                + uuidString.substring(24);
+        return orderedUUIDString;
+    }
+
+    public static byte[] convertHexStringToBytes(String s) {
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                    + Character.digit(s.charAt(i+1), 16));
+        }
+        return data;
+    }
+
+    public static String convertBytesToHexString(byte[] bytes) {
+        char[] hexArray = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+        char[] hexChars = new char[bytes.length * 2];
+        int v;
+        for ( int j = 0; j < bytes.length; j++ ) {
+            v = bytes[j] & 0xFF;
+            hexChars[j*2] = hexArray[v/16];
+            hexChars[j*2 + 1] = hexArray[v%16];
+        }
+        return new String(hexChars);
+    }
+
+    public byte[] generateHMACUUID() {
+        return generateHMACUUID(ShortUUID.generateOrderedTimeBasedUUID(), ShortUUID.randomUUID());
+    }
+
+    private static byte[] generateHMACUUID(String data, String key) {
+        try {
+            SecretKeySpec secretKey = new SecretKeySpec(key.getBytes("UTF-8"), "HmacSHA1");
+            Mac mac = Mac.getInstance("HmacSHA1");
+            mac.init(secretKey);
+            return mac.doFinal(data.getBytes("UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        } catch (InvalidKeyException e) {
+            throw new RuntimeException(e);
+        }
     }
     
 }
