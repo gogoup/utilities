@@ -96,7 +96,7 @@ public class ShortUUID {
         return generateHMACUUID(ShortUUID.generateOrderedTimeBasedUUID(), ShortUUID.randomUUID());
     }
 
-    private static byte[] generateHMACUUID(String data, String key) {
+    public static byte[] generateHMACUUID(String data, String key) {
         try {
             SecretKeySpec secretKey = new SecretKeySpec(key.getBytes("UTF-8"), "HmacSHA1");
             Mac mac = Mac.getInstance("HmacSHA1");
