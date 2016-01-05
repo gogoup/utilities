@@ -1,14 +1,16 @@
 package org.gogoup.utilities.misc;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Created by ruisun on 2015-11-08.
  */
-public class TransactionManager implements TransactionalService {
+public class TransactionManager {
 
     private Map<String, TransactionalService> services;
+    private Map<String, TransactionStateImpl> states;
 
     public TransactionManager() {
         this.services = new HashMap<>();
@@ -22,29 +24,71 @@ public class TransactionManager implements TransactionalService {
         return services.remove(name);
     }
 
-    @Override
-    public String getName() {
-        return "TransactionManager";
-    }
-
-    @Override
     public void startTransaction() {
         for (TransactionalService service: services.values()) {
-            service.startTransaction();
+            TransactionStateImpl state = new TransactionStateImpl(service.getName());
+            states.put(service.getName(), state);
+            service.startTransaction(state);
         }
     }
 
-    @Override
     public void commit() {
         for (TransactionalService service: services.values()) {
-            service.commit();
+            TransactionStateImpl state = states.remove(service.getName());
+            state.finish();
+            service.commit(state);
         }
     }
 
-    @Override
     public void rollback() {
         for (TransactionalService service: services.values()) {
-            service.rollback();
+            TransactionStateImpl state = states.remove(service.getName());
+            state.finish();
+            service.rollback(state);
+        }
+    }
+
+    private static class TransactionStateImpl implements TransactionState {
+
+        private String name;
+        private Date startTime;
+        private Date endTime;
+        private Map<String, Object> properties;
+
+        public TransactionStateImpl(String name) {
+            this.name = name;
+            this.startTime = new Date(System.currentTimeMillis());
+            this.endTime = null;
+            this.properties = new HashMap<>();
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public Date getStartTime() {
+            return startTime;
+        }
+
+        @Override
+        public Date getEndTime() {
+            return endTime;
+        }
+
+        @Override
+        public void setProperty(String name, Object property) {
+            properties.put(name, property);
+        }
+
+        @Override
+        public Object getProperty(String name) {
+            return properties.get(name);
+        }
+
+        public void finish() {
+            endTime = new Date(System.currentTimeMillis());
         }
     }
 }

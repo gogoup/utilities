@@ -7,10 +7,10 @@ public interface TransactionalService {
 
     public String getName();
 
-    public void startTransaction();
+    public void startTransaction(TransactionState state);
 
-    public void commit();
+    public void commit(TransactionState state);
 
-    public void rollback();
+    public void rollback(TransactionState state);
 
 }
