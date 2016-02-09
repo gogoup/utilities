@@ -9,10 +9,6 @@ public interface TransactionState {
 
     public String getName();
 
-    public Date getStartTime();
-
-    public Date getEndTime();
-
     public void setProperty(String name, Object property);
 
     public Object getProperty(String name);
