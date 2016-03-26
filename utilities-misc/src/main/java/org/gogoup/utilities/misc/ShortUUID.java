@@ -24,6 +24,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.UUID;
 
 public class ShortUUID {
@@ -79,27 +80,28 @@ public class ShortUUID {
 
     public static String generateBase64HMACUUID() {
         try {
-            return Base64.encodeBytes(
-                    generateHMACUUID(ShortUUID.generateOrderedTimeBasedUUID(), ShortUUID.randomUUID()),
-                    Base64.URL_SAFE);
+            return Base64.encodeBytes(generateHMACUUID(), Base64.URL_SAFE);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     public static String generateHexHMACUUID() {
-        return convertBytesToHexString(
-                generateHMACUUID(ShortUUID.generateOrderedTimeBasedUUID(), ShortUUID.randomUUID()));
+        return convertBytesToHexString(generateHMACUUID());
     }
 
     private static byte[] generateHMACUUID() {
-        return generateHMACUUID(ShortUUID.generateOrderedTimeBasedUUID(), ShortUUID.randomUUID());
+        return generateHMACUUID(ShortUUID.randomUUID());
     }
 
-    public static byte[] generateHMACUUID(String data, String key) {
+    public static byte[] generateHMACUUID(String data) {
         try {
-            SecretKeySpec secretKey = new SecretKeySpec(key.getBytes("UTF-8"), "HmacSHA1");
-            Mac mac = Mac.getInstance("HmacSHA1");
+            SecureRandom random = new SecureRandom();
+            byte[] key = new byte[24];
+            random.nextBytes(key);
+
+            SecretKeySpec secretKey = new SecretKeySpec(key, "HmacSHA512");
+            Mac mac = Mac.getInstance("HmacSHA512");
             mac.init(secretKey);
             return mac.doFinal(data.getBytes("UTF-8"));
         } catch (UnsupportedEncodingException e) {
@@ -110,5 +112,5 @@ public class ShortUUID {
             throw new RuntimeException(e);
         }
     }
-    
+
 }
