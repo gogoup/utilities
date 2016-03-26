@@ -28,7 +28,11 @@ import java.security.SecureRandom;
 import java.util.UUID;
 
 public class ShortUUID {
-    
+
+    public static String HMAC_UUID_SHA1 = "HmacSHA1";
+    public static String HMAC_UUID_SHA256 = "HmacSHA256";
+    public static String HMAC_UUID_SHA512 = "HmacSHA512";
+
     public static String randomUUID() {
         try {
             String id = new String(Base64.encodeBytes(toByteArray(UUID.randomUUID()), Base64.URL_SAFE)).toLowerCase();
@@ -78,30 +82,30 @@ public class ShortUUID {
         return new String(hexChars);
     }
 
-    public static String generateBase64HMACUUID() {
+    public static String generateBase64HMACUUID(String algorithm) {
         try {
-            return Base64.encodeBytes(generateHMACUUID(), Base64.URL_SAFE);
+            return Base64.encodeBytes(generateHMACUUID(algorithm), Base64.URL_SAFE);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static String generateHexHMACUUID() {
-        return convertBytesToHexString(generateHMACUUID());
+    public static String generateHexHMACUUID(String algorithm) {
+        return convertBytesToHexString(generateHMACUUID(algorithm));
     }
 
-    private static byte[] generateHMACUUID() {
-        return generateHMACUUID(ShortUUID.randomUUID());
+    private static byte[] generateHMACUUID(String algorithm) {
+        return generateHMACUUID(ShortUUID.randomUUID(), algorithm);
     }
 
-    public static byte[] generateHMACUUID(String data) {
+    public static byte[] generateHMACUUID(String data, String algorithm) {
         try {
             SecureRandom random = new SecureRandom();
             byte[] key = new byte[24];
             random.nextBytes(key);
 
-            SecretKeySpec secretKey = new SecretKeySpec(key, "HmacSHA512");
-            Mac mac = Mac.getInstance("HmacSHA512");
+            SecretKeySpec secretKey = new SecretKeySpec(key, algorithm);
+            Mac mac = Mac.getInstance(algorithm);
             mac.init(secretKey);
             return mac.doFinal(data.getBytes("UTF-8"));
         } catch (UnsupportedEncodingException e) {
