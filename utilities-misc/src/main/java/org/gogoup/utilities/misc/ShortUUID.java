@@ -82,12 +82,20 @@ public class ShortUUID {
         return new String(hexChars);
     }
 
+    public static String generateBase64HMACUUID() {
+        return generateBase64HMACUUID(ShortUUID.HMAC_UUID_SHA1);
+    }
+
     public static String generateBase64HMACUUID(String algorithm) {
         try {
             return Base64.encodeBytes(generateHMACUUID(algorithm), Base64.URL_SAFE);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static String generateHexHMACUUID() {
+        return convertBytesToHexString(generateHMACUUID(ShortUUID.HMAC_UUID_SHA1));
     }
 
     public static String generateHexHMACUUID(String algorithm) {
