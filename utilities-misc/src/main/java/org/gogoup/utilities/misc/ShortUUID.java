@@ -88,7 +88,7 @@ public class ShortUUID {
 
     public static String generateBase64HMACUUID(String algorithm) {
         try {
-            return Base64.encodeBytes(generateHMACUUID(algorithm), Base64.URL_SAFE);
+            return Base64.encodeBytes(generateHMACUUID(algorithm), Base64.URL_SAFE).replace("=", "");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -106,21 +106,24 @@ public class ShortUUID {
         return generateHMACUUID(ShortUUID.randomUUID(), algorithm);
     }
 
-    public static byte[] generateHMACUUID(String data, String algorithm) {
-        try {
-            SecureRandom random = new SecureRandom();
-            byte[] key = new byte[24];
-            random.nextBytes(key);
+    public static byte[] generateFixedHMACUUID(String data, String algorithm) {
+        return generateHMACUUID(data.getBytes(), data, algorithm);
+    }
 
+    public static byte[] generateHMACUUID(String data, String algorithm) {
+        SecureRandom random = new SecureRandom();
+        byte[] key = new byte[24];
+        random.nextBytes(key);
+        return generateHMACUUID(key, data, algorithm);
+    }
+
+    private static byte[] generateHMACUUID(byte[] key, String data, String algorithm) {
+        try {
             SecretKeySpec secretKey = new SecretKeySpec(key, algorithm);
             Mac mac = Mac.getInstance(algorithm);
             mac.init(secretKey);
             return mac.doFinal(data.getBytes("UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        } catch (InvalidKeyException e) {
+        } catch (UnsupportedEncodingException | InvalidKeyException | NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
     }
