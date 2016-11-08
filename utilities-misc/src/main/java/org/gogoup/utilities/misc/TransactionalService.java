@@ -7,11 +7,11 @@ public interface TransactionalService {
 
     public String getName();
 
-    public void startTransaction(TransactionContext context, TransactionState state);
+    public void startTransaction(TransactionContext context, TransactionState state) throws TransactionalServiceException;
 
-    public void commit(TransactionContext context, TransactionState state);
+    public void commit(TransactionContext context, TransactionState state) throws TransactionalServiceException;
 
-    public void rollback(TransactionContext context, TransactionState state);
+    public void rollback(TransactionContext context, TransactionState state) throws TransactionalServiceException;
 
     public void onError(TransactionContext context, TransactionState state, Exception exception);
 

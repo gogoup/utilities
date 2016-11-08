@@ -8,18 +8,9 @@ public class Sorting {
     private String field;
     private Order order;
 
-    private Sorting() {
-
-    }
-
-    public Sorting on(String field) {
+    public Sorting(String field, Order order) {
         this.field = field;
-        return this;
-    }
-
-    public Sorting by(Sorting.Order order) {
         this.order = order;
-        return this;
     }
 
     public String getField() {
@@ -30,14 +21,9 @@ public class Sorting {
         return order;
     }
 
-    public static Sorting build() {
-        return new Sorting();
-    }
-
-    public enum Order {
+    public static enum Order {
         ASC,
-        DESC,
-        DEFAULT
+        DESC
     }
 
 }

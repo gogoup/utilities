@@ -8,5 +8,5 @@
   <artifactId>utilities-pagination</artifactId>
   <name>Utilities Pagination</name>
   <description>A simple and polluteless paging solution.</description>
-  <version>0.6.3-SNAPSHOT</version>
+  <version>0.6.4</version>
 </project>

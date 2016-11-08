@@ -43,6 +43,9 @@ public class ShortUUID {
     }
     
     private static byte[] toByteArray(UUID uuid) {
+        if (null == uuid) {
+            return null;
+        }
         ByteBuffer bb = ByteBuffer.wrap(new byte[16]);
         bb.putLong(uuid.getMostSignificantBits());
         bb.putLong(uuid.getLeastSignificantBits());
@@ -61,6 +64,9 @@ public class ShortUUID {
     }
 
     public static byte[] convertHexStringToBytes(String s) {
+        if (null == s) {
+            return null;
+        }
         int len = s.length();
         byte[] data = new byte[len / 2];
         for (int i = 0; i < len; i += 2) {
@@ -70,7 +76,21 @@ public class ShortUUID {
         return data;
     }
 
+    public static byte[] convertBase64StringToBytes(String str) {
+        if (null == str) {
+            return null;
+        }
+        try {
+            return Base64.decode(str, Base64.URL_SAFE);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static String convertBytesToHexString(byte[] bytes) {
+        if (null == bytes) {
+            return null;
+        }
         char[] hexArray = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
         char[] hexChars = new char[bytes.length * 2];
         int v;
@@ -88,7 +108,7 @@ public class ShortUUID {
 
     public static String generateBase64HMACUUID(String algorithm) {
         try {
-            return Base64.encodeBytes(generateHMACUUID(algorithm), Base64.URL_SAFE).replace("=", "");
+            return Base64.encodeBytes(generateHMACUUID(algorithm), Base64.URL_SAFE);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -107,6 +127,9 @@ public class ShortUUID {
     }
 
     public static byte[] generateFixedHMACUUID(String data, String algorithm) {
+        if (null == data) {
+            return null;
+        }
         return generateHMACUUID(data.getBytes(), data, algorithm);
     }
 
@@ -118,6 +141,9 @@ public class ShortUUID {
     }
 
     private static byte[] generateHMACUUID(byte[] key, String data, String algorithm) {
+        if (null == data) {
+            return null;
+        }
         try {
             SecretKeySpec secretKey = new SecretKeySpec(key, algorithm);
             Mac mac = Mac.getInstance(algorithm);

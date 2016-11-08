@@ -36,8 +36,9 @@ public abstract class PaginatedResultMapper<T, S> implements PaginatedResultDele
     @Override
     public T fetchResult(ResultFetchRequest request) {
         checkForUnsupportedKeys(request.getKey());
+        @SuppressWarnings("unchecked")
         PaginatedResult<S> result = (PaginatedResult<S>) request.getArguments()[paginatedResultIndex];
-        result = result.start(request.getPageOffset());
+        result = result.start(request.getPageOffset(), request.getSorting());
         return toResult(request.getKey(), result.getResult(), request.getArguments());
     }
 

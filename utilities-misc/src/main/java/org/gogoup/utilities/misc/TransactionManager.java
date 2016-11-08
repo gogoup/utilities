@@ -9,10 +9,10 @@ public interface TransactionManager {
     
     public TransactionalService deregister(String name);
 
-    public void startTransaction();
+    public void startTransaction() throws TransactionalServiceException;
 
-    public void commit();
+    public void commit() throws TransactionalServiceException;
 
-    public void rollback();
+    public void rollback() throws TransactionalServiceException;
 
 }

@@ -1,6 +1,7 @@
 package org.gogoup.utilities.misc;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -14,8 +15,8 @@ public class DefaultTransactionManager implements TransactionManager {
     private TransactionContext context;
 
     public DefaultTransactionManager() {
-        this.services = new HashMap<>();
-        this.states = new HashMap<>();
+        this.services = new LinkedHashMap<>();
+        this.states = new LinkedHashMap<>();
         this.context = null;
     }
 
@@ -30,7 +31,7 @@ public class DefaultTransactionManager implements TransactionManager {
     }
 
     @Override
-    public void startTransaction() {
+    public void startTransaction() throws TransactionalServiceException {
         context = new TransactionContextImpl();
         for (TransactionalService service: services.values()) {
             TransactionStateImpl state =
@@ -41,7 +42,7 @@ public class DefaultTransactionManager implements TransactionManager {
     }
 
     @Override
-    public void commit() {
+    public void commit() throws TransactionalServiceException {
         for (TransactionalService service: services.values()) {
             TransactionStateImpl state = states.remove(service.getName());
             service.commit(context, state);
@@ -50,7 +51,7 @@ public class DefaultTransactionManager implements TransactionManager {
     }
 
     @Override
-    public void rollback() {
+    public void rollback() throws TransactionalServiceException {
         for (TransactionalService service: services.values()) {
             TransactionStateImpl state = states.remove(service.getName());
             service.rollback(context, state);
