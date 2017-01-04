@@ -34,10 +34,10 @@
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
-            <version>3.1</version>
+            <version>3.3</version>
             <configuration>
-                <source>1.7</source>
-                <target>1.7</target>
+                <source>1.8</source>
+                <target>1.8</target>
             </configuration>
         </plugin>
         <plugin>
@@ -55,5 +55,6 @@
   	<module>utilities-pagination</module>
   	<module>utilities-misc</module>
       <module>utilities-cassandra</module>
+      <module>utilities-play</module>
   </modules>
 </project>
