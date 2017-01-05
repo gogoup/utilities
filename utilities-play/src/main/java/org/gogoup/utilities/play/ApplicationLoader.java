@@ -15,7 +15,7 @@ import java.util.Date;
  */
 public class ApplicationLoader extends GuiceApplicationLoader {
 
-    private static final Logger LOG = LoggerFactory.getLogger("loader");
+    private static final Logger LOG = LoggerFactory.getLogger(ApplicationLoader.class);
 
     @Override
     public GuiceApplicationBuilder builder(play.ApplicationLoader.Context context) {
@@ -26,10 +26,10 @@ public class ApplicationLoader extends GuiceApplicationLoader {
         if (StringUtils.isBlank(env)) {
             env = "dev";
         }
-        LOG.debug("Environment: {}", env);
         String configPath = String.format("application.%s.conf", env);
-        LOG.debug("Configuration: {}", configPath);
-        LOG.debug("Starting at: {}", new Date(System.currentTimeMillis()));
+        LOG.info("Environment: {}", env);
+        LOG.info("Configuration: {}", configPath);
+        LOG.info("Starting at: {}", new Date(System.currentTimeMillis()));
         Configuration cfg = new Configuration(ConfigFactory.load(configPath));
         return initialBuilder
                 .in(context.environment())

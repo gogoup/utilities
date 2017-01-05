@@ -3,6 +3,8 @@ package org.gogoup.utilities.play;
 import com.google.inject.Provider;
 import org.gogoup.utilities.play.auth.APIKeyAuthHandler;
 import org.gogoup.utilities.play.auth.AuthHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import play.Configuration;
 
 import java.util.ArrayList;
@@ -14,22 +16,26 @@ import java.util.List;
  */
 public  class AuthHandlerProvider implements Provider<List<AuthHandler>> {
 
+    private static final Logger LOG = LoggerFactory.getLogger(AuthHandlerProvider.class);
+
     private List<AuthHandler> authHandlerHandlers;
 
-    public AuthHandlerProvider(Configuration configuration) {
+    public AuthHandlerProvider(Configuration configuration, ClassLoader classLoader) {
         this.authHandlerHandlers = new ArrayList<>(5);
         this.authHandlerHandlers.add(new APIKeyAuthHandler(configuration.getString("apiKey")));
         List<String> handlers = configuration.getStringList("auth.handlers");
         if (null != handlers) {
-            loadAdditionalAuthHandler(handlers);
+            loadAdditionalAuthHandler(handlers, classLoader);
         }
         this.authHandlerHandlers = Collections.unmodifiableList(authHandlerHandlers);
     }
 
-    private void loadAdditionalAuthHandler(List<String> handlers) {
+    private void loadAdditionalAuthHandler(List<String> handlers, ClassLoader classLoader) {
         try {
             for (String handler: handlers) {
-                authHandlerHandlers.add((AuthHandler) Class.forName(handler).newInstance());
+                LOG.info("Load auth handler: {}", handler);
+                authHandlerHandlers.add(
+                        (AuthHandler) classLoader.loadClass(handler).newInstance());
             }
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
             e.printStackTrace();
