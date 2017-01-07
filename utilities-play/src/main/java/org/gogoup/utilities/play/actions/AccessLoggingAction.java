@@ -16,6 +16,7 @@ import play.mvc.Result;
 import play.mvc.Results;
 
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -89,41 +90,63 @@ public class AccessLoggingAction extends Action.Simple {
 
     private void logError(Http.Request request, Result result, long startAt, Throwable exception) {
         long duration = System.currentTimeMillis() - startAt;
-        akka.util.ByteString body = play.core.j.JavaResultExtractor.getBody(result, 10000l, mat);
-        Object requestBody = getRequestBody(request);
-        LOG.error("client={} method={} request={} bytes={} status={} duration={} request_body={} response_body={}",
-                getClientIp(request),
-                request.method(),
-                request.uri(),
-                body.size(),
-                result.status(),
-                duration,
-                requestBody,
-                body.decodeString("UTF-8"),
-                exception);
+        if (includeBody) {
+            akka.util.ByteString body = play.core.j.JavaResultExtractor.getBody(result, 10000l, mat);
+            Object requestBody = getRequestBody(request);
+            LOG.error("client={} method={} request={} bytes={} status={} duration={} request_body={} response_body={}",
+                    getClientIp(request),
+                    request.method(),
+                    request.uri(),
+                    body.size(),
+                    result.status(),
+                    duration,
+                    requestBody,
+                    body.decodeString("UTF-8"),
+                    exception);
+        } else {
+            LOG.error("client={} method={} request={} bytes={} status={} duration={}",
+                    getClientIp(request),
+                    request.method(),
+                    request.uri(),
+                    getResponseBodyLength(result),
+                    result.status(),
+                    duration,
+                    exception);
+        }
     }
 
     private void logWarn(Http.Request request, Result result, long startAt, Throwable exception) {
         long duration = System.currentTimeMillis() - startAt;
-        akka.util.ByteString body = play.core.j.JavaResultExtractor.getBody(result, 10000l, mat);
-        Object requestBody = getRequestBody(request);
-        LOG.warn("client={} method={} request={} bytes={} status={} duration={} request_body={} response_body={}",
-                getClientIp(request),
-                request.method(),
-                request.uri(),
-                body.size(),
-                result.status(),
-                duration,
-                requestBody,
-                body.decodeString("UTF-8"),
-                exception);
+        if (includeBody) {
+            akka.util.ByteString body = play.core.j.JavaResultExtractor.getBody(result, 10000l, mat);
+            Object requestBody = getRequestBody(request);
+            LOG.warn("client={} method={} request={} bytes={} status={} duration={} request_body={} response_body={}",
+                    getClientIp(request),
+                    request.method(),
+                    request.uri(),
+                    body.size(),
+                    result.status(),
+                    duration,
+                    requestBody,
+                    body.decodeString("UTF-8"),
+                    exception);
+        } else {
+            LOG.warn("client={} method={} request={} bytes={} status={} duration={}",
+                    getClientIp(request),
+                    request.method(),
+                    request.uri(),
+                    getResponseBodyLength(result),
+                    result.status(),
+                    duration,
+                    exception);
+        }
+
     }
 
     private void logInfo(Http.Request request, Result result, long startAt) {
         long duration = System.currentTimeMillis() - startAt;
-
-        akka.util.ByteString body = play.core.j.JavaResultExtractor.getBody(result, 10000l, mat);
         if (includeBody) {
+            akka.util.ByteString body = play.core.j.JavaResultExtractor.getBody(result, 10000l, mat);
             Object requestBody = getRequestBody(request);
             LOG.info("client={} method={} request={} bytes={} status={} duration={} request_body={} response_body={}",
                     getClientIp(request),
@@ -139,11 +162,27 @@ public class AccessLoggingAction extends Action.Simple {
                     getClientIp(request),
                     request.method(),
                     request.uri(),
-                    body.size(),
+                    getResponseBodyLength(result),
                     result.status(),
                     duration);
         }
+    }
 
+    private long getRequestBodyLength(Http.Request request) {
+        String lengthHeader = request.getHeader("Content-Length");
+        if (null == lengthHeader) {
+            return request.body().asBytes().size();
+        }
+        return Long.valueOf(lengthHeader);
+    }
+
+    private long getResponseBodyLength(Result result) {
+        Optional<Long> length = result.body().contentLength();
+        if (!length.isPresent()) {
+            akka.util.ByteString body = play.core.j.JavaResultExtractor.getBody(result, 10000l, mat);
+            return body.size();
+        }
+        return length.get();
     }
 
     private Object getRequestBody(Http.Request request) {
