@@ -33,7 +33,7 @@ public  class AuthHandlerProvider implements Provider<List<AuthHandler>> {
     private void loadAdditionalAuthHandler(List<String> handlers, ClassLoader classLoader) {
         try {
             for (String handler: handlers) {
-                LOG.info("Load auth handler: {}", handler);
+                LOG.info("Registering auth handler: {}", handler);
                 authHandlerHandlers.add(
                         (AuthHandler) classLoader.loadClass(handler).newInstance());
             }
