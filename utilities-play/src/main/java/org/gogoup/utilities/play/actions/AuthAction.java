@@ -1,7 +1,6 @@
 package org.gogoup.utilities.play.actions;
 
 import com.google.inject.Inject;
-import org.gogoup.utilities.play.AuthHandlerProvider;
 import org.gogoup.utilities.play.auth.AuthHandler;
 import org.gogoup.utilities.play.commons.AuthenticationFailedException;
 import org.slf4j.Logger;
@@ -21,7 +20,7 @@ import java.util.concurrent.CompletionStage;
  */
 public class AuthAction extends Action<Auth> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AuthHandlerProvider.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AuthAction.class);
 
     private final List<AuthHandler> authHandlerHandlers;
     private final Map<String, AuthHandler> actionAuthHandlerDict;
