@@ -9,7 +9,7 @@ import java.sql.SQLException;
 /**
  * Created by ruisun on 2016-10-29.
  */
-public abstract class JDBCTransactionalService implements TransactionalService {
+public abstract class JDBCTransactionalService2 implements TransactionalService {
 
     private static final String TRANSACTION_COUNT = "_TRANSACTION_COUNT_";
     private static final String TRANSACTION_COMMIT_COUNT = "_TRANSACTION_COMMIT_COUNT_";
@@ -17,32 +17,17 @@ public abstract class JDBCTransactionalService implements TransactionalService {
     private static final String TRANSACTION_CONNECTION = "_TRANSACTION_CONNECTION_";
 
     private String name;
-    private JDBCConnectionHelper helper;
+    private DataSource dataSource;
+    private Connection connection; //cache connection as local transaction started.
     private TransactionContext txContext;
+    private boolean isLocalTransactionStarted;
 
-
-    public JDBCTransactionalService(String name, JDBCConnectionHelper helper) {
+    public JDBCTransactionalService2(String name, DataSource dataSource) {
         this.name = name;
-        this.helper = helper;
+        this.dataSource = dataSource;
+        this.connection = null;
         this.txContext = null;
-    }
-
-    public JDBCTransactionalService(String name, DataSource dataSource) {
-        this(name, new JDBCConnectionHelper(dataSource));
-    }
-
-    private JDBCConnectionHelper getHelper() {
-        if (!isGlobalTransactionStarted()) {
-            return helper;
-        }
-        JDBCConnectionHelper globalHelper = (JDBCConnectionHelper) txContext.getProperty(TRANSACTION_CONNECTION);
-        if (null == globalHelper) {
-            helper.startTransaction();
-            txContext.setProperty(TRANSACTION_CONNECTION, helper);
-        } else {
-            helper = globalHelper;
-        }
-        return helper;
+        this.isLocalTransactionStarted = false;
     }
 
     private boolean isGlobalTransactionStarted() {
@@ -50,11 +35,45 @@ public abstract class JDBCTransactionalService implements TransactionalService {
     }
 
     private boolean isLocalTransactionStarted() {
-        return getHelper().isTransactionStarted();
+        return isLocalTransactionStarted;
     }
 
     protected Connection getConnection() {
-        return getHelper().getConnection();
+        try {
+            if (!isGlobalTransactionStarted()) {
+                if (isLocalTransactionStarted()) {
+                    return getLocalTransactionConnection();
+                }
+                return getNoneTransactionConnection();
+            }
+            return getGlobalTransactionConnection();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Connection getLocalTransactionConnection() throws SQLException {
+        if (null == connection) {
+            connection = dataSource.getConnection();
+            connection.setAutoCommit(false);
+        }
+        return connection;
+    }
+
+    private Connection getNoneTransactionConnection() throws SQLException {
+        Connection conn =  dataSource.getConnection();
+        conn.setAutoCommit(true);
+        return conn;
+    }
+
+    private Connection getGlobalTransactionConnection() throws SQLException {
+        Connection conn = (Connection) txContext.getProperty(TRANSACTION_CONNECTION);
+        if (null == conn) {
+            conn = dataSource.getConnection();
+            conn.setAutoCommit(false);
+            txContext.setProperty(TRANSACTION_CONNECTION, conn);
+        }
+        return conn;
     }
 
     private void checkForGlobalTransactionNotStarted() {
@@ -70,7 +89,7 @@ public abstract class JDBCTransactionalService implements TransactionalService {
     }
 
     protected void startLocalTransaction() {
-        getHelper().startTransaction();
+        isLocalTransactionStarted = true;
     }
 
     protected void commit() {
@@ -78,7 +97,13 @@ public abstract class JDBCTransactionalService implements TransactionalService {
         if (isGlobalTransactionStarted()) {
             return;
         }
-        getHelper().commit();
+        try {
+            connection.commit();
+            cleanLocalTransaction();
+        } catch (SQLException e) {
+            //TODO: log this error
+            throw new RuntimeException(e);
+        }
     }
 
     protected void rollback() {
@@ -86,15 +111,39 @@ public abstract class JDBCTransactionalService implements TransactionalService {
         if (isGlobalTransactionStarted()) {
             throw new RuntimeException("Require rollback!"); //trigger global transaction rollback.
         }
-        getHelper().rollback();
+        try {
+            connection.rollback();
+            cleanLocalTransaction();
+        } catch (SQLException e) {
+            //TODO: log this error
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void cleanLocalTransaction() throws SQLException {
+        connection.close();
+        connection = null;
+        isLocalTransactionStarted = false;
     }
 
     protected void closeResultSet(ResultSet rs) {
-        helper.closeResultSet(rs);
+        try {
+            if (null != rs) {
+                rs.close();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     protected void closePreparedStatement(PreparedStatement stmt) {
-        helper.closePreparedStatement(stmt);
+        try {
+            if (null != stmt) {
+                stmt.close();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     protected void closeConnection(Connection conn) {
@@ -168,10 +217,17 @@ public abstract class JDBCTransactionalService implements TransactionalService {
     public void doCommit(TransactionContext context, TransactionState transactionState)
             throws TransactionalServiceException {
         checkForGlobalTransactionNotStarted();
-        if (isLastTransactionCall()) {
-            getHelper().commit();
-            txContext = null;
-            markTransactionAsCommit();
+        try {
+            if (isLastTransactionCall()) {
+                Connection conn = getConnection();
+                conn.commit();
+                conn.close();
+                txContext = null;
+                markTransactionAsCommit();
+            }
+        } catch (SQLException e) {
+            //TODO: log this error
+            throw new TransactionalServiceException(e);
         }
     }
 
@@ -179,10 +235,17 @@ public abstract class JDBCTransactionalService implements TransactionalService {
     public void doRollback(TransactionContext context, TransactionState transactionState)
             throws TransactionalServiceException {
         checkForGlobalTransactionNotStarted();
-        if (isLastTransactionCall()) {
-            getHelper().rollback();
-            txContext = null;
-            markTransactionAsRollback();
+        try {
+            if (isLastTransactionCall()) {
+                Connection conn = getConnection();
+                conn.rollback();
+                conn.close();
+                txContext = null;
+                markTransactionAsRollback();
+            }
+        } catch (SQLException e) {
+            //TODO: log this error
+            throw new TransactionalServiceException(e);
         }
     }
 

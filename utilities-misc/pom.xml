@@ -8,7 +8,7 @@
     <artifactId>utilities-misc</artifactId>
     <name>Utilities Misc</name>
     <description>Things are not worth to be maintained as an individual module.</description>
-    <version>0.12.0</version>
+    <version>0.13.0</version>
 
     <dependencies>
         <dependency>

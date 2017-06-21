@@ -5,14 +5,14 @@ package org.gogoup.utilities.misc;
  */
 public interface TransactionalService {
 
-    public String getName();
+    String getName();
 
-    public void startTransaction(TransactionContext context, TransactionState state) throws TransactionalServiceException;
+    void doStartTransaction(TransactionContext context, TransactionState state) throws TransactionalServiceException;
 
-    public void commit(TransactionContext context, TransactionState state) throws TransactionalServiceException;
+    void doCommit(TransactionContext context, TransactionState state) throws TransactionalServiceException;
 
-    public void rollback(TransactionContext context, TransactionState state) throws TransactionalServiceException;
+    void doRollback(TransactionContext context, TransactionState state) throws TransactionalServiceException;
 
-    public void onError(TransactionContext context, TransactionState state, Exception exception);
+    void onError(TransactionContext context, TransactionState state, Exception exception);
 
 }

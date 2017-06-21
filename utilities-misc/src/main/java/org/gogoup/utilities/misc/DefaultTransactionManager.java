@@ -37,7 +37,7 @@ public class DefaultTransactionManager implements TransactionManager {
             TransactionStateImpl state =
                     new TransactionStateImpl(service.getName());
             states.put(service.getName(), state);
-            service.startTransaction(context, state);
+            service.doStartTransaction(context, state);
         }
     }
 
@@ -45,7 +45,7 @@ public class DefaultTransactionManager implements TransactionManager {
     public void commit() throws TransactionalServiceException {
         for (TransactionalService service: services.values()) {
             TransactionStateImpl state = states.remove(service.getName());
-            service.commit(context, state);
+            service.doCommit(context, state);
         }
         this.context = null;
     }
@@ -54,7 +54,7 @@ public class DefaultTransactionManager implements TransactionManager {
     public void rollback() throws TransactionalServiceException {
         for (TransactionalService service: services.values()) {
             TransactionStateImpl state = states.remove(service.getName());
-            service.rollback(context, state);
+            service.doRollback(context, state);
         }
         this.context = null;
     }
