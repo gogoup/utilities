@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import org.gogoup.utilities.play.commons.ErrorResponse;
+import org.gogoup.utilities.play.commons.ErrorResultFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -34,10 +35,16 @@ public class AccessLoggingAction extends Action.Simple {
     private @Named("appVersion") String appVersion;
     @Inject
     private @Named("accessLoggingIncludeBody") Boolean includeBody;
+    @Inject
+    private @Named("accessLoggingBodyMaxSize") long accessLoggingBodyMaxSize;
+
+    private ErrorResultFactory errorResultFactory;
 
     @Inject
-    public AccessLoggingAction(Materializer mat) {
+    public AccessLoggingAction(Materializer mat, ErrorResultFactory errorResultFactory) {
         this.mat = mat;
+        this.accessLoggingBodyMaxSize = 10240; //10KB
+        this.errorResultFactory = errorResultFactory;
     }
 
     public CompletionStage<Result> call(Http.Context ctx) {
@@ -69,23 +76,7 @@ public class AccessLoggingAction extends Action.Simple {
     }
 
     private Result processBusinessException(Throwable exception) {
-        ErrorResponse response = new ErrorResponse(exception);
-        return getResult(response);
-    }
-
-    private Result getResult(ErrorResponse response) {
-        JsonNode responseJson = Json.toJson(response);
-        Result result;
-        if (response.getCode() == ErrorResponse.ERROR_INTERNAL_SERVER_ERROR) {
-            result = Results.internalServerError(responseJson);
-        } else if (response.getCode() == ErrorResponse.ERROR_NO_SUCH_ENTITY) {
-            result = Results.notFound(responseJson);
-        } else if (response.getCode() == ErrorResponse.AUTHENTICATION_FAILED) {
-            result = Results.unauthorized(responseJson);
-        } else {
-            result = Results.badRequest(responseJson);
-        }
-        return result;
+        return errorResultFactory.generate(exception);
     }
 
     private void logError(Http.Request request, Result result, long startAt, Throwable exception) {
@@ -147,6 +138,10 @@ public class AccessLoggingAction extends Action.Simple {
         long duration = System.currentTimeMillis() - startAt;
         if (includeBody) {
             akka.util.ByteString body = play.core.j.JavaResultExtractor.getBody(result, 10000l, mat);
+            if (body.size() > accessLoggingBodyMaxSize) { //100KB
+                logInfoWithoutBodies(request, result, duration);
+                return;
+            }
             Object requestBody = getRequestBody(request);
             LOG.info("client={} method={} request={} bytes={} status={} duration={} request_body={} response_body={}",
                     getClientIp(request),
@@ -158,14 +153,18 @@ public class AccessLoggingAction extends Action.Simple {
                     requestBody,
                     body.decodeString("UTF-8"));
         } else {
-            LOG.info("client={} method={} request={} bytes={} status={} duration={}",
-                    getClientIp(request),
-                    request.method(),
-                    request.uri(),
-                    getResponseBodyLength(result),
-                    result.status(),
-                    duration);
+            logInfoWithoutBodies(request, result, duration);
         }
+    }
+
+    private void logInfoWithoutBodies(Http.Request request, Result result, long duration) {
+        LOG.info("client={} method={} request={} bytes={} status={} duration={}",
+                getClientIp(request),
+                request.method(),
+                request.uri(),
+                getResponseBodyLength(result),
+                result.status(),
+                duration);
     }
 
     private long getRequestBodyLength(Http.Request request) {

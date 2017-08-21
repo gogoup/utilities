@@ -43,23 +43,33 @@ public class AuthAction extends Action<Auth> {
     }
 
     private void verify(Http.Context ctx) {
-        if (configuration.name().trim().length() == 0) {
+        if (isDefaultNameValue()) {
             for (AuthHandler authHandler : authHandlerHandlers) {
                 if (authHandler.verify(ctx)) {
                     return;
                 }
             }
-            throw new AuthenticationFailedException(
-                    "This action is not authorized to perform!");
         }
-        AuthHandler handler = actionAuthHandlerDict.get(configuration.name().toLowerCase());
-        if (null == handler) {
-            throw new IllegalArgumentException("No such auth handler, \'" + configuration.name() + "\'");
+        for (String name: configuration.name()) {
+            AuthHandler handler = actionAuthHandlerDict.get(name.toLowerCase());
+            if (null == handler) {
+                throw new IllegalArgumentException("No such auth handler, \'" + name + "\'");
+            }
+            if (handler.verify(ctx)) {
+                return;
+            }
         }
-        if (!handler.verify(ctx)) {
-            throw new AuthenticationFailedException(
-                    "This action is not authorized to perform!");
+        throw new AuthenticationFailedException(
+                "This action is not authorized to perform!");
+    }
+
+    private boolean isDefaultNameValue() {
+        for (String name: configuration.name()) {
+            if (name.length() > 0) {
+                return false;
+            }
         }
+        return true;
     }
 
 }

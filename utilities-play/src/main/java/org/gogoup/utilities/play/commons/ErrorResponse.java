@@ -11,28 +11,22 @@ import java.util.Map;
  */
 public class ErrorResponse {
 
-    public static final int ERROR_INTERNAL_SERVER_ERROR = -1;
-    public static final int ERROR_NO_SUCH_ENTITY = 400000;
-    public static final int AUTHENTICATION_FAILED = 400401;
+    public static final int DEFAULT_ERROR_CODE = -1;
+    public static final int NO_SUCH_ENTITY_ERROR_CODE = 400000;
+    public static final int AUTHENTICATION_FAILED_ERROR_CODE = 400401;
 
     private int code;
     private Map<String, Object> details;
     private String message;
 
-    public ErrorResponse(Throwable exception) {
-        this.code = ErrorResponse.getCode(exception);
-        this.details = getDetails(exception);
-        if (ErrorResponse.ERROR_INTERNAL_SERVER_ERROR == code) {
-            this.message = "Our system is facing an issue to complete your request";
-        } else {
-            this.message = exception.getMessage();
-        }
+    public ErrorResponse(int code, String message) {
+        this(code, getEmptyDetails(), message);
     }
 
-    private Map<String, Object> getDetails(Throwable exception) {
-        Map<String, Object> details;
-        details = new HashMap<>();
-        return Collections.unmodifiableMap(details);
+    public ErrorResponse(int code, Map<String, Object> details, String message) {
+        this.code = code;
+        this.details = Collections.unmodifiableMap(details);
+        this.message = message;
     }
 
     public int getCode() {
@@ -45,14 +39,36 @@ public class ErrorResponse {
         return message;
     }
 
-    private static int getCode(Throwable exception) {
-        int code = ERROR_INTERNAL_SERVER_ERROR;
+    private static Map<String, Object> getEmptyDetails() {
+        Map<String, Object> details;
+        details = new HashMap<>();
+        return Collections.unmodifiableMap(details);
+    }
+
+    public static String getDefaultMessage(Throwable exception) {
+        int code = getDefaultCode(exception);
+        if (ErrorResponse.DEFAULT_ERROR_CODE == code) {
+            return "Our system is facing an issue to complete your request";
+        } else {
+            return exception.getMessage();
+        }
+    }
+
+    public static int getDefaultCode(Throwable exception) {
+        int code = DEFAULT_ERROR_CODE;
         if (NoSuchEntityFoundException.class.equals(exception.getClass())) {
-            code = ErrorResponse.ERROR_NO_SUCH_ENTITY;
+            code = ErrorResponse.NO_SUCH_ENTITY_ERROR_CODE;
         } else if (AuthenticationFailedException.class.equals(exception.getClass())) {
-            code = AUTHENTICATION_FAILED;
+            code = AUTHENTICATION_FAILED_ERROR_CODE;
         }
         return code;
+    }
+
+    public static ErrorResponse toErrorResponse(Throwable exception) {
+        return new ErrorResponse(
+                getDefaultCode(exception),
+                getEmptyDetails(),
+                getDefaultMessage(exception));
     }
 
 }

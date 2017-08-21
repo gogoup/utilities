@@ -63,7 +63,7 @@ public class JDBCConnectionHelper {
         checkForTransactionNotStarted();
         try {
             connection.commit();
-            cleanLocalTransaction();
+            cleanTransaction();
         } catch (SQLException e) {
             //TODO: log this error
             throw new RuntimeException(e);
@@ -74,14 +74,15 @@ public class JDBCConnectionHelper {
         checkForTransactionNotStarted();
         try {
             connection.rollback();
-            cleanLocalTransaction();
+            cleanTransaction();
         } catch (SQLException e) {
             //TODO: log this error
             throw new RuntimeException(e);
         }
     }
 
-    private void cleanLocalTransaction() throws SQLException {
+    private void cleanTransaction() throws SQLException {
+        connection.setAutoCommit(true);
         connection.close();
         connection = null;
         isTransactionStarted = false;
