@@ -45,30 +45,37 @@ public class ErrorResponse {
         return Collections.unmodifiableMap(details);
     }
 
-    public static String getDefaultMessage(Throwable exception) {
-        int code = getDefaultCode(exception);
-        if (ErrorResponse.DEFAULT_ERROR_CODE == code) {
-            return "Our system is facing an issue to complete your request";
-        } else {
-            return exception.getMessage();
+    public static Throwable getThrowable(Class<?> clazz, Throwable exception) {
+        Throwable next = exception;
+        while (null != next) {
+            if (clazz.equals(next.getClass())) {
+                return next;
+            }
+            next = next.getCause();
         }
-    }
-
-    public static int getDefaultCode(Throwable exception) {
-        int code = DEFAULT_ERROR_CODE;
-        if (NoSuchEntityFoundException.class.equals(exception.getClass())) {
-            code = ErrorResponse.NO_SUCH_ENTITY_ERROR_CODE;
-        } else if (AuthenticationFailedException.class.equals(exception.getClass())) {
-            code = AUTHENTICATION_FAILED_ERROR_CODE;
-        }
-        return code;
+        return null;
     }
 
     public static ErrorResponse toErrorResponse(Throwable exception) {
+        Throwable throwable;
+        throwable = getThrowable(NoSuchEntityFoundException.class, exception);
+        if (null != throwable) {
+            return new ErrorResponse(
+                    ErrorResponse.NO_SUCH_ENTITY_ERROR_CODE,
+                    getEmptyDetails(),
+                    exception.getMessage());
+        }
+        throwable = getThrowable(AuthenticationFailedException.class, exception);
+        if (null != throwable) {
+            return new ErrorResponse(
+                    ErrorResponse.AUTHENTICATION_FAILED_ERROR_CODE,
+                    getEmptyDetails(),
+                    exception.getMessage());
+        }
         return new ErrorResponse(
-                getDefaultCode(exception),
+                ErrorResponse.DEFAULT_ERROR_CODE,
                 getEmptyDetails(),
-                getDefaultMessage(exception));
+                "Our system is facing an issue to complete your request");
     }
 
 }
