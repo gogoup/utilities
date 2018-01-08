@@ -2,13 +2,13 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.gogoup.utilities</groupId>
-        <artifactId>utilities-parent</artifactId>
+        <artifactId>utilities</artifactId>
         <version>release-0</version>
     </parent>
     <artifactId>utilities-misc</artifactId>
     <name>Utilities Misc</name>
     <description>Things are not worth to be maintained as an individual module.</description>
-    <version>0.13.0</version>
+    <version>0.14.0</version>
 
     <dependencies>
         <dependency>

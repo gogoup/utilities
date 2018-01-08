@@ -1,8 +1,5 @@
 package org.gogoup.utilities.pagination;
 
-/**
- * Created by ruisun on 2015-10-23.
- */
 public class Sorting {
 
     private String field;
@@ -21,7 +18,7 @@ public class Sorting {
         return order;
     }
 
-    public static enum Order {
+    public enum Order {
         ASC,
         DESC
     }

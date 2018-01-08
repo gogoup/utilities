@@ -1,8 +1,5 @@
 package org.gogoup.utilities.pagination;
 
-/**
- * Created by ruisun on 2015-06-01.
- */
 public class ResultFetchRequest {
 
     private String id;
